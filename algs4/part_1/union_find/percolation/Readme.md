@@ -7,13 +7,13 @@
 
 #### virtual sites
 
-课程里提到了这种方法，添加两个 virtual sites。一个用来 union `row = 1` 的行的所有 open sites，另一个用来 union `row = N` 的行的所有 open sites。这样，我们就可以通过判断 `connected(topVirtual, bottomVirtual)` 的值来确定 percolate 与否，而不用循环遍历 `row1` 和 `rowN` 这两行，再去逐个比较 `connected(sites[row1, colI], sites[rowN, colI])` 了
+课程里提到了这种方法，添加两个 virtual sites。一个用来 union `row = 1` 的行的所有 open sites，另一个用来 union `row = N` 的行的所有 open sites。这样，我们就可以通过判断 `connected(topVirtual, bottomVirtual)` 的值来确定 percolate 与否，而不用循环遍历 `row1` 和 `rowN` 这两行，再去逐个比较 `connected(sites[row1, colI], sites[rowN, colI])` 了。Coursera 的课程上有很清晰的图示。
 
 #### backwash
 
-上面提到的 virtual sites 会存在一个问题：如果已经存在一条 percolate 的路径，即 `connected(topVirtual, bottomVirtual) == true`，这时再在 rowN open 一个 site，那么会产生 backwash。因为 open rowN 上的 site 会 union `sites[rowN, colI]` 和 bottomVirtual，而 bottomVirutal 和 topVirtual 已经 connected，所以 `sites[rowN, colI]` 会和 topVirtual connected，造成 `isFull(rowN, colI)` 返回 true，当然任何与 `sites[rowN, colI]` union 之后的点都会有问题。backwash 的图示可见 `backwash.jpg`。
+上面提到的 virtual sites 会存在一个问题：如果已经存在一条 percolate 的路径，即 `connected(topVirtual, bottomVirtual) == true`，这时再在 rowN 行 open 一个 site，那么会产生 backwash(倒灌，回流)。因为 open 行 rowN 上的 site 会 union `sites[rowN, colI]` 和 bottomVirtual，而 bottomVirutal 和 topVirtual 已经 connected，所以 `sites[rowN, colI]` 会和 topVirtual connected，造成 `isFull(rowN, colI)` 返回 true，而实际上它是通过 bottomVirtual 连通传递到了 topVirtual，任何与 `sites[rowN, colI]` union 之后的点都会有同样的问题。backwash 的图示可见 `backwash.jpg`，该图出处源自 [知乎](https://zhuanlan.zhihu.com/p/34922195)
 
-要验证是否有 backwash 的问题，可以用 `input4.txt` 的数据，按照顺序 open 7 个 sites，最后验证 `sites[4,  4]`
+要验证是否有 backwash 的问题，可以用 `input4.txt` 的数据，按照顺序 open 7 个 sites，最后验证 `sites[4,  4]`，代码如下：
 
 ```
 Percolation p = new Percolation(4);
