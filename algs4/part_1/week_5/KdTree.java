@@ -160,13 +160,15 @@ public class KdTree {
   public Point2D nearest(Point2D p) {
     if (p == null) throw new IllegalArgumentException("input point CANNOT be null");
     if (isEmpty()) return null;
-    return searchNearest(p, root.val, root);
+    RectHV rootRect = new RectHV(0.0, 0.0, 1.0, 1.0);
+    return searchNearest(p, root.val, root, rootRect);
   }
 
-  private Point2D searchNearest(Point2D query, Point2D nearest, Node curr) {
+  private Point2D searchNearest(Point2D query, Point2D nearest, Node curr, RectHV parent) {
     if (curr == null) return nearest;
-    double query2Rect = 0.0;
     double query2Nearest = query.distanceSquaredTo(nearest);
+    RectHV smaller = null;
+    RectHV larger = null;
     if (query.distanceSquaredTo(curr.val) < query2Nearest) nearest = curr.val;
 
     /**
@@ -183,28 +185,38 @@ public class KdTree {
      *    otherwise, continue
     */
     if (XAXIS == curr.axis) {
-       query2Rect = (query.x() - curr.key) * (query.x() - curr.key);
+      smaller = new RectHV(parent.xmin(), parent.ymin(), curr.val.x(), parent.ymax());
+      larger = new RectHV(curr.val.x(), parent.ymin(), parent.xmax(), parent.ymax());
 
       if (query.x() < curr.key) {
-        nearest = searchNearest(query, nearest, curr.left);
+        nearest = searchNearest(query, nearest, curr.left, smaller);
         query2Nearest = query.distanceSquaredTo(nearest);
-        if (query2Rect <= query2Nearest) nearest = searchNearest(query, nearest, curr.right);
+        if (larger.distanceSquaredTo(query) <= query2Nearest) {
+          nearest = searchNearest(query, nearest, curr.right, larger);
+        }
       } else {
-        nearest = searchNearest(query, nearest, curr.right);
+        nearest = searchNearest(query, nearest, curr.right, larger);
         query2Nearest = query.distanceSquaredTo(nearest);
-        if (query2Rect <= query2Nearest) nearest = searchNearest(query, nearest, curr.left);
+        if (smaller.distanceSquaredTo(query) <= query2Nearest) {
+          nearest = searchNearest(query, nearest, curr.left, smaller);
+        }
       }
     } else {
-      query2Rect = (query.y() - curr.key) * (query.y() - curr.key);
+      smaller = new RectHV(parent.xmin(), parent.ymin(), parent.xmax(), curr.val.y());
+      larger = new RectHV(parent.xmin(), curr.val.y(), parent.xmax(), parent.ymax());
 
-       if (query.y() < curr.key) {
-        nearest = searchNearest(query, nearest, curr.left);
+      if (query.y() < curr.key) {
+        nearest = searchNearest(query, nearest, curr.left, smaller);
         query2Nearest = query.distanceSquaredTo(nearest);
-        if (query2Rect <= query2Nearest) nearest = searchNearest(query, nearest, curr.right);
+        if (larger.distanceSquaredTo(query) <= query2Nearest) {
+          nearest = searchNearest(query, nearest, curr.right, larger);
+        }
       } else {
-        nearest = searchNearest(query, nearest, curr.right);
+        nearest = searchNearest(query, nearest, curr.right, larger);
         query2Nearest = query.distanceSquaredTo(nearest);
-        if (query2Rect <= query2Nearest) nearest = searchNearest(query, nearest, curr.left);
+        if (smaller.distanceSquaredTo(query) <= query2Nearest) {
+          nearest = searchNearest(query, nearest, curr.left, smaller);
+        }
       }
     }
 
@@ -324,17 +336,29 @@ public class KdTree {
 
     // NearestNeighborVisualizer.java
     // initialize the two data structures with point from file
-    String filename = args[0];
-    In in = new In(filename);
-    KdTree kdtree = new KdTree();
-    while (!in.isEmpty()) {
-      double x = in.readDouble();
-      double y = in.readDouble();
-      Point2D p = new Point2D(x, y);
-      kdtree.insert(p);
-    }
+    // String filename = args[0];
+    // In in = new In(filename);
+    // KdTree kdtree = new KdTree();
+    // while (!in.isEmpty()) {
+    //   double x = in.readDouble();
+    //   double y = in.readDouble();
+    //   Point2D p = new Point2D(x, y);
+    //   kdtree.insert(p);
+    // }
 
-    System.out.println(kdtree.nearest(new Point2D(0.19, 0.69)));
+    // System.out.println(kdtree.nearest(new Point2D(0.71875, 0.6875)));
+
+    // RectHV rect = new RectHV(0.4, 0.3, 0.8, 0.6);
+    // Point2D p1 = new Point2D(0.0, 0.0);
+    // Point2D p2 = new Point2D(0.1, 0.4);
+    // Point2D p3 = new Point2D(0.6, 0.5);
+    // Point2D p4 = new Point2D(0.8, 1.0);
+    // System.out.println(rect.distanceSquaredTo(p1));
+    // System.out.println(rect.distanceSquaredTo(p2));
+    // System.out.println(rect.distanceSquaredTo(p3));
+    // System.out.println(rect.distanceSquaredTo(p4));
+    // System.out.println(rect.distanceSquaredTo(new Point2D(0.5, 0.0)));
+
 
     // // process nearest neighbor queries
     // StdDraw.enableDoubleBuffering();
